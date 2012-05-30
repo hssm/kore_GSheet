@@ -91,7 +91,7 @@ class DeckQuery:
             WHERE factId=? AND fieldModelId=?
             '''
         field = self.c.execute(s, [fieldValue, factId, fieldModelId]) 
-        self.conn.commit()
+        #self.conn.commit()
         
 
     def printCoreIndexOfClozeFixed(self):
@@ -102,6 +102,8 @@ class DeckQuery:
                 print fieldName, " :: ", fieldValue
 
 
+    def commit(self):
+        self.conn.commit()
 
 if __name__ == "__main__":
     dq = DeckQuery()
