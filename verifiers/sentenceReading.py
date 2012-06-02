@@ -27,19 +27,19 @@ def checkInnerComma(doFix=False):
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        commaPortion = innerComma_re.search(clozeField)
+        commaPortion = innerComma_re.search(sentKanaField)
         if commaPortion is not None:
             # Comma inside furiganafied word!
             found += 1
-            print factDict['Core-Index'], '\t::\t', clozeField
+            print factDict['Core-Index'], '\t::\t', sentKanaField
             if doFix:
                 fixedComma = commaPortion.group(1) + '、'
-                fixed = re.sub(innerComma_re, fixedComma, clozeField)
+                fixed = re.sub(innerComma_re, fixedComma, sentKanaField)
                 print '\t-->\t', fixed
                 dq.updateFieldByCoreIndex(factDict['Core-Index'],
-                                          'Sentence-Clozed', fixed)
+                                          'Reading', fixed)
     print "Found: ", found 
     
 
@@ -59,13 +59,13 @@ def checkSpacedByCommaFurigana(doFix=False):
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        spaceMatch = innerSpace_re.search(clozeField)
+        spaceMatch = innerSpace_re.search(sentKanaField)
         if spaceMatch is not None:
             # Space inside furiganafied word!
             found += 1
-            print factDict['Core-Index'], '\t::\t', clozeField
+            print factDict['Core-Index'], '\t::\t', sentKanaField
             if doFix:
                 firstWord = spaceMatch.group(1)
                 secondWord = spaceMatch.group(2)
@@ -75,34 +75,11 @@ def checkSpacedByCommaFurigana(doFix=False):
                 fixedFuri = '%s[%s]、 %s[%s]' % (firstWord, firstFuri,
                                                secondWord, secondFuri) 
                 
-                fixed = re.sub(innerSpace_re, fixedFuri, clozeField)
+                fixed = re.sub(innerSpace_re, fixedFuri, sentKanaField)
                 print '\t-->\t', fixed
                 dq.updateFieldByCoreIndex(factDict['Core-Index'],
-                                          'Sentence-Clozed', fixed)
+                                          'Reading', fixed)
     print "Found: ", found    
-
-def checkNoCloze():
-    '''
-    Prints out all cases of a missing cloze deletion
-    '''
-    hasCloze_re = re.compile(ur'<b>(.+)</b>', re.UNICODE)
-
-    print '######### No cloze deletions #########'
-    found = 0
-    s = 'SELECT id FROM facts'
-    facts = c.execute(s).fetchall()
-    for fact in facts:
-        fact_id = fact['id'].__str__()
-        factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
-        
-        clozedPortion = hasCloze_re.search(clozeField)
-        if clozedPortion is None:
-            # No cloze deletion in this field!
-            found += 1
-            print factDict['Core-Index'], '\t::\t', clozeField
-                
-    print "Found: ", found 
 
 def extraSpace1(doFix=False):
     '''
@@ -118,12 +95,12 @@ def extraSpace1(doFix=False):
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        spacedPortion = hasSpaces_re.search(clozeField)
+        spacedPortion = hasSpaces_re.search(sentKanaField)
         if spacedPortion is not None:
             found += 1
-            print factDict['Core-Index'], '\t::\t', clozeField
+            print factDict['Core-Index'], '\t::\t', sentKanaField
             if doFix:
                 #TODO: add a fix rule for this case
                 pass
@@ -143,12 +120,12 @@ def extraSpace2(doFix=False):
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        spacedPortion = hasSpaces_re.search(clozeField)
+        spacedPortion = hasSpaces_re.search(sentKanaField)
         if spacedPortion is not None:
             found += 1
-            print factDict['Core-Index'], '\t::\t', clozeField
+            print factDict['Core-Index'], '\t::\t', sentKanaField
             if doFix:
                 #TODO: add a fix rule for this case
                 pass
@@ -158,9 +135,10 @@ def extraSpace3(doFix=False):
     '''
     Prints out all cases of a space after a </b>,  where the next
     character is a kana (so no space should be there).
-    
+    From: <b>昨日[さくじつ]</b> は 雨[あめ]でしたね。
+    To  : <b>昨日[さくじつ]</b>は 雨[あめ]でしたね。
     '''
-    hasSpaces_re = re.compile(ur'</b>\s(\w)', re.UNICODE)
+    hasSpaces_re = re.compile(ur'(</b>)\s(\w)', re.UNICODE)
 
     print '######### Extra spaces3 #########'
     found = 0
@@ -169,20 +147,20 @@ def extraSpace3(doFix=False):
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        spacedPortion = hasSpaces_re.search(clozeField)
+        spacedPortion = hasSpaces_re.search(sentKanaField)
         if spacedPortion is not None:
-            nextChar = spacedPortion.group(1)
+            nextChar = spacedPortion.group(2)
             if isKana(nextChar):
                 found += 1
-                print factDict['Core-Index'], '\t::\t', clozeField
+                print factDict['Core-Index'], '\t::\t', sentKanaField
                 if doFix:
                     fixedSpace = spacedPortion.group(1) + spacedPortion.group(2) 
-                    fixed = re.sub(hasSpaces_re, fixedSpace, clozeField)
+                    fixed = re.sub(hasSpaces_re, fixedSpace, sentKanaField)
                     print '\t-->\t', fixed
                     dq.updateFieldByCoreIndex(factDict['Core-Index'],
-                                              'Sentence-Clozed', fixed)
+                                              'Reading', fixed)
                     pass
     print "Found: ", found 
 
@@ -200,81 +178,52 @@ def extraSpace4(doFix=False):
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        spacedPortion = hasSpaces_re.search(clozeField)
+        spacedPortion = hasSpaces_re.search(sentKanaField)
         if spacedPortion is not None:
             nextChar = spacedPortion.group(2)
             if isKana(nextChar):
                 found += 1
-                print factDict['Core-Index'], '\t::\t', clozeField
+                print factDict['Core-Index'], '\t::\t', sentKanaField
                 if doFix:
                     fixedSpace = spacedPortion.group(1) + spacedPortion.group(2) 
-                    fixed = re.sub(hasSpaces_re, fixedSpace, clozeField)
+                    fixed = re.sub(hasSpaces_re, fixedSpace, sentKanaField)
                     print '\t-->\t', fixed
                     dq.updateFieldByCoreIndex(factDict['Core-Index'],
-                                              'Sentence-Clozed', fixed)
+                                              'Reading', fixed)
                     pass
     print "Found: ", found 
 
-def spaceInFurigana(doFix=False):
+def checkNoBold(doFix=False):
     '''
-    
+    Prints out all cases where the key word isn't emboldened
     '''
-    innerSpace_re = re.compile(ur'(\w+)\[(\w+)\s+(\w+)\]', re.UNICODE)
+    hasSpaces_re = re.compile(ur'<b>.+</b>', re.UNICODE)
 
-    print '######### Space inside furigana #########'
+    print '######### No bold #########'
     found = 0
     s = 'SELECT id FROM facts'
     facts = c.execute(s).fetchall()
     for fact in facts:
         fact_id = fact['id'].__str__()
         factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
+        sentKanaField = factDict['Reading']
         
-        spaceMatch = innerSpace_re.search(clozeField)
-        if spaceMatch is not None:
-            # Space inside furiganafied word!
+        spacedPortion = hasSpaces_re.search(sentKanaField)
+        if spacedPortion is None:
             found += 1
-            print factDict['Core-Index'], '\t::\t', clozeField
-                
-    print "Found: ", found  
-
-def checkWrongCloze(doFix=False):
-    '''
-    Finds cards with an incorrect cloze deletion. There are some
-    false positives. They need to be fixed manually anyway.
-    '''
-
-    print '######### Incorrect cloze #########'
-    found = 0
-    s = 'SELECT id FROM facts'
-    facts = c.execute(s).fetchall()
-    for fact in facts:
-        fact_id = fact['id'].__str__()
-        factDict = dq.getFactDict(fact_id)
-        clozeField = factDict['Sentence-Clozed']
-        vocabField = factDict['Vocabulary-Kanji']
-        
-        if vocabField in clozeField:
-            found += 1
-            print factDict['Core-Index'], '\t::\t', 
-            print vocabField, '\t::\t', clozeField
+            print factDict['Core-Index'], '\t::\t', sentKanaField
 
     print "Found: ", found 
-
-
-if __name__ == "__main__":
-    #It is likely that the order is important. It's best to follow this order,
-    #just to be sure.
     
-    checkNoCloze()
+if __name__ == "__main__":
+
     checkInnerComma(doFix=False)
     checkSpacedByCommaFurigana(doFix=False)
     extraSpace1(doFix=False)
     extraSpace2(doFix=False)
-    checkWrongCloze(doFix=False)
     extraSpace3(doFix=False)
     extraSpace4(doFix=False)
-
+    checkNoBold(doFix=False)
     #dq.commit()
