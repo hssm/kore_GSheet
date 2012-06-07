@@ -131,8 +131,6 @@ def uploadDeckToGSheet(gd_client, spreadsheet_id, worksheet_id, deck):
     for row in rows:
         coreIndex = row.custom['core-index'].text
         optVocIndex = row.custom['opt-voc-index'].text
-        if int(optVocIndex) < 1433:
-            continue
         try:
             factDict = deck.getFactByCoreIndex(coreIndex)
         except:
