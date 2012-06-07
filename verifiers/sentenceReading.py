@@ -111,7 +111,7 @@ def extraSpace2(doFix=False):
     Prints out all cases of multiple spaces occurring because one was
     inside <b> tags, and optionally fix them.
     '''
-    hasSpaces_re = re.compile(ur'\s<b>\s', re.UNICODE)
+    hasSpaces_re = re.compile(ur'\s(<b>)\s', re.UNICODE)
 
     print '######### Extra spaces2 #########'
     found = 0
@@ -127,8 +127,11 @@ def extraSpace2(doFix=False):
             found += 1
             print factDict['Core-Index'], '\t::\t', sentKanaField
             if doFix:
-                #TODO: add a fix rule for this case
-                pass
+                fixedSpace = spacedPortion.group(1) + ' ' 
+                fixed = re.sub(hasSpaces_re, fixedSpace, sentKanaField)
+                print '\t-->\t', fixed
+                dq.updateFieldByCoreIndex(factDict['Core-Index'],
+                                          'Reading', fixed)
     print "Found: ", found 
 
 def extraSpace3(doFix=False):
@@ -195,6 +198,38 @@ def extraSpace4(doFix=False):
                     pass
     print "Found: ", found 
 
+def checkFirstBoldSpace(doFix=False):
+    '''
+    Prints out all cases of a space after a ],  where the next
+    character is a kana (so no space should be there).
+    '''
+    hasSpaces_re = re.compile(ur'<b>(.+)</b>', re.UNICODE)
+
+    print '######### No space in first bold #########'
+    found = 0
+    s = 'SELECT id FROM facts'
+    facts = c.execute(s).fetchall()
+    for fact in facts:
+        fact_id = fact['id'].__str__()
+        factDict = dq.getFactDict(fact_id)
+        sentKanaField = factDict['Reading']
+        
+        spacedPortion = hasSpaces_re.search(sentKanaField)
+        if spacedPortion is not None:
+            firstBoldChar = spacedPortion.group(1)[0]
+            if not isKana(firstBoldChar) and not firstBoldChar == ' ':
+                found += 1
+                print factDict['Core-Index'], '\t::\t', sentKanaField
+                if doFix:
+                    fixedSpace = '<b> ' + spacedPortion.group(1) + '</b>' 
+                    fixed = re.sub(hasSpaces_re, fixedSpace, sentKanaField)
+                    print '\t-->\t', fixed
+                    dq.updateFieldByCoreIndex(factDict['Core-Index'],
+                                              'Reading', fixed)
+
+    print "Found: ", found 
+    
+
 def checkNoBold(doFix=False):
     '''
     Prints out all cases where the key word isn't emboldened
@@ -222,8 +257,9 @@ if __name__ == "__main__":
     checkInnerComma(doFix=False)
     checkSpacedByCommaFurigana(doFix=False)
     extraSpace1(doFix=False)
-    extraSpace2(doFix=False)
+    extraSpace2(doFix=True)
     extraSpace3(doFix=False)
     extraSpace4(doFix=False)
     checkNoBold(doFix=False)
-    #dq.commit()
+    checkFirstBoldSpace(doFix=True)
+#    dq.commit()

@@ -74,6 +74,6 @@ def removeRichTextWithContent(doFix=False):
 
 if __name__ == "__main__":
    
-    removeRichTextEmpty(doFix=False)
-    removeRichTextWithContent(doFix=False)
+    #removeRichTextEmpty(doFix=False)
+    #removeRichTextWithContent(doFix=False)
     #dq.commit()
